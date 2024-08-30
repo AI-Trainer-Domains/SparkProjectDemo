@@ -1,30 +1,3 @@
-To refactor the `hadoop.md` file by condensing it and providing tables and formatted explanations based on the `hadoop.html` and `timeline.html` documentation, here’s an approach that can be taken:
-
-### 1. **Combine Sections with Overlapping Content**
-   - **Purpose & Overview**: Combine the purpose of setting up a Hadoop cluster with an overview of the YARN Timeline Server, highlighting the key points of each system.
-   - **Prerequisites**: List all prerequisites (e.g., Java installation, downloading Hadoop) in a table format for clarity.
-   - **Installation & Deployment**: Merge these sections to streamline the installation and deployment process.
-
-### 2. **Use Tables for Configurations**
-   - **Configurations**: Create tables for different configuration parameters, such as Hadoop Daemons, YARN, and Timeline Server configurations.
-   - **Environment Variables**: Consolidate all environment variables into a single table with columns for Daemon, Environment Variable, and Description.
-   - **Web Interfaces**: Provide a table with columns for Daemon, Web Interface, and Default Port.
-
-### 3. **Summarize Key Information**
-   - **Operating the Cluster**: Provide a bullet-point summary of steps to start and stop the Hadoop cluster, focusing on critical commands.
-   - **Health Monitoring & Logging**: Summarize the key aspects of monitoring NodeManager health and configuring logging in concise bullet points.
-
-### 4. **Use Formatting for Emphasis**
-   - Use **bold** and *italic* formatting to emphasize important notes or cautions.
-   - Include code blocks for commands and configuration examples.
-
-### 5. **Provide Visual Structure**
-   - Utilize headers (`h2`, `h3`, etc.) to organize the content, making it easy to navigate.
-   - Include diagrams or flowcharts if possible to represent processes like the Timeline Server structure.
-
-### Sample Refactored Sections:
-
-
 # Hadoop Cluster and YARN Timeline Server Setup
 
 ## Purpose & Overview
