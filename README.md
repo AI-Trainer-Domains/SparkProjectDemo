@@ -4,6 +4,7 @@
 
 This document guides you through setting up a Hadoop cluster, including configuring YARN's Timeline Server for tracking application history.
 
+
 ### Prerequisites
 
 | Requirement           | Description                                    | Link                                                                                            |
