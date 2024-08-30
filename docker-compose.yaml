@@ -1,0 +1,180 @@
+version: "3.8"
+
+networks:
+    hadoop:
+        driver: bridge
+        labels:
+            - "com.docker.compose.project=hadoop"
+            - "com.docker.compose.service=hadoop"
+            - "com.docker.compose.network=bridge"
+            - "com.docker.compose.container-number=1"
+            - "com.docker.compose.version=2.24.6"
+
+volumes:
+    hadoop_namenode: null
+    hadoop_resourcemanager: null
+    hadoop_nodemanager: null
+    hadoop_historyserver: null
+
+services:
+  proxyserver:
+    image: apache/hadoop:3
+    container_name: proxyserver
+    hostname: proxyserver
+    command: ["yarn", "proxyserver"]
+    ports:
+        - "9099:9099"
+    env_file:
+        - hadoop.env
+    networks:
+        - hadoop
+    healthcheck:
+        test: "curl -f http://proxyserver:9099/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
+
+  namenode:
+      build:
+          context: .
+          dockerfile: .devcontainer/namenode/Dockerfile
+      container_name: namenode
+      hostname: namenode
+      command: ["hdfs", "namenode"]
+      ports:
+          - "9870:9870"
+          - "8020:8020"
+      volumes:
+        - hadoop_namenode:/opt/hadoop/dfs/name
+      env_file:
+        - hadoop.env
+      environment:
+        ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+      networks:
+        - hadoop
+      healthcheck:
+        test: "curl -f http://namenode:9870/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
+
+  secondarynamenode:
+        image: apache/hadoop:3
+        container_name: secondarynamenode
+        hostname: secondarynamenode
+        command: ["hdfs", "secondarynamenode"]
+        ports:
+          - "9868:9868"
+        volumes:
+            - hadoop_namenode:/opt/hadoop/dfs/name
+        env_file:
+            - hadoop.env
+        environment:
+          ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+        networks:
+            - hadoop
+        healthcheck:
+            test: "curl -f http://secondarynamenode:9868/ || exit 1"
+            interval: 30s
+            timeout: 30s
+            retries: 3
+
+  datanode:
+      build:
+        context: .
+        dockerfile: .devcontainer/datanode/Dockerfile
+      hostname: datanode
+      command: ["hdfs", "datanode"]
+#      ports:
+#        - "9864:9864"
+#        - "9866:9866"
+      env_file:
+        - hadoop.env
+      networks:
+        - hadoop
+      deploy:
+        mode: replicated
+        replicas: 2
+        restart_policy:
+          condition: on-failure
+          delay: 5s
+        resources:
+          limits:
+            cpus: "0.5"
+            memory: "512M"
+          reservations:
+            cpus: "0.25"
+            memory: "256M"
+        placement:
+          constraints: [ "node.role == worker" ]
+        update_config:
+          parallelism: 2
+          delay: 10s
+      healthcheck:
+        test: "curl -f http://localhost:9864/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
+
+  resourcemanager:
+      image: apache/hadoop:3
+      container_name: resourcemanager
+      hostname: resourcemanager
+      command: ["yarn", "resourcemanager"]
+      ports:
+        - "8088:8088"
+        - "8030:8030"
+        - "8031:8031"
+        - "8032:8032"
+      volumes:
+        - hadoop_resourcemanager:/opt/hadoop/yarn
+      env_file:
+        - hadoop.env
+      networks:
+        - hadoop
+      healthcheck:
+        test: "curl -f http://resourcemanager:8088/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
+
+  nodemanager:
+      image: apache/hadoop:3
+      container_name: nodemanager
+      hostname: nodemanager
+      command: ["yarn", "nodemanager"]
+      ports:
+        - "8042:8042"
+      volumes:
+        - hadoop_nodemanager:/opt/hadoop/yarn
+      env_file:
+        - hadoop.env
+      networks:
+        - hadoop
+      healthcheck:
+        test: "curl -f http://nodemanager:8042/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
+
+  timelineserver:
+      image: apache/hadoop:3
+      container_name: timelineserver
+      hostname: timelineserver
+      command: ["yarn", "timelineserver"]
+      ports:
+        - "8188:8188"
+        - "10200:10200"
+      volumes:
+          - hadoop_historyserver:/opt/hadoop/yarn
+      env_file:
+          - hadoop.env
+#      environment:
+#        SERVICE_PRECONDITION: "namenode:8020 datanode:9864 resourcemanager:8088"
+      networks:
+          - hadoop
+      healthcheck:
+        test: "curl -f http://timelineserver:8188/ || exit 1"
+        interval: 30s
+        timeout: 30s
+        retries: 3
